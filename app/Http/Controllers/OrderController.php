@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CartItemCollection;
 use App\Http\Resources\OrderCollection;
-use App\Http\Resources\OrderItemCollection;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -32,7 +31,7 @@ class OrderController extends Controller
             'address_id'=>'required|exists:addresses,id'
         ]);
         $cart= Cart::query()->where('user_id', auth()->user()->id)->first();
-        if ($cart!=null) {
+        if ($cart!==null) {
             $cartItem = $cart->items()->get();
             $cartItems = $cart->items();
             $order = Order::query()->create([
