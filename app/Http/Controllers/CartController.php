@@ -20,8 +20,15 @@ class CartController extends Controller
         ]);
         $product = Product::findOrFail($request->product_id);
         if ($request->quantity > $product->quantity) {
-            return['errors' => 'تعداد وارد شده بیشتر از موجودی کالا است'];
+            return ['errors' => 'تعداد وارد شده بیشتر از موجودی کالا است'];
         }
+
+//        $cart = Cart::query()->where('user_id', auth()->id())->firstOrCreate();
+//        $cartItem = $cart->items()->firstOrCreate([
+//            'product_id' => $product->id,
+//        ]);
+//        $cartItem->quantity += $request->quantity;
+//        $cartItem->save();
         if (!Cart::query()->where('user_id', auth()->user()->id)->exists()) {
             $createCart = new Cart(
                 [
@@ -49,9 +56,9 @@ class CartController extends Controller
                 $createCart->update();
 
             }
-            return response()->json(['message' => 'محصول با موفقیت به سبد خرید اضافه شد'],202);
-        }else{
-            $cart= Cart::query()->where('user_id', auth()->user()->id)->first();
+            return response()->json(['message' => 'محصول با موفقیت به سبد خرید اضافه شد'], 202);
+        } else {
+            $cart = Cart::query()->where('user_id', auth()->user()->id)->first();
             $cartItem = $cart->items()->where('product_id', $product->id)->first();
 
             if ($cartItem) {
@@ -66,7 +73,7 @@ class CartController extends Controller
 
                 ]);
                 $cart->items()->save($cartItem);
-                $cart->total_price = CartItem::query()->where('cart_id', $cart->id)->sum('total_price');
+                $cart->total_price = $cart->items()->sum('total_price');
                 $cart->update();
 
             }
@@ -79,18 +86,19 @@ class CartController extends Controller
     public function showCart(Request $request)
     {
 
-        $cart=Cart::query()->where('user_id', auth()->user()->id)->first();
-        if ($cart===null){
-            return response()->json(['yourCart' => 'سبد خرید شما خالی است'],404);
+        $cart = Cart::query()->where('user_id', auth()->user()->id)->first();
+        if ($cart === null) {
+            return response()->json(['yourCart' => 'سبد خرید شما خالی است'], 404);
         }
         return new CartItemCollection(CartItem::query()->where('cart_id', $cart->id)->paginate(6));
     }
 
     // Destroy Cart
-    public function destroyCart(Request $request){
-        $cart= Cart::query()->where('user_id', auth()->user()->id)->first();
-        if ($cart===null){
-            return response()->json(['yourCart' => 'سبد خرید شما خالی است'],404);
+    public function destroyCart(Request $request)
+    {
+        $cart = Cart::query()->where('user_id', auth()->user()->id)->first();
+        if ($cart === null) {
+            return response()->json(['yourCart' => 'سبد خرید شما خالی است'], 404);
         }
         $cartItem = $cart->items();
         $cartItem->delete();
@@ -101,17 +109,17 @@ class CartController extends Controller
     // Less Count Product
     public function lessItem(Request $request)
     {
-        $cart= Cart::query()->where('user_id', auth()->user()->id)->first();
-        if ($cart===null){
+        $cart = Cart::query()->where('user_id', auth()->user()->id)->first();
+        if ($cart === null) {
             return response()->json(['yourCart' => 'سبد خرید شما خالی است']);
         }
         $request->validate([
             'product_id' => 'required|exists:cart_items,product_id',
         ]);
-        $cartItem=$cart->items()->where('product_id', $request->product_id)->first();
+        $cartItem = $cart->items()->where('product_id', $request->product_id)->first();
         $cartItem->quantity--;
-        $cartItem->total_price=$cartItem->quantity * $cartItem->price;
-        if ($cartItem->quantity<=0){
+        $cartItem->total_price = $cartItem->quantity * $cartItem->price;
+        if ($cartItem->quantity <= 0) {
             $cartItem->where('product_id', $request->product_id)->delete();
             $cartItem->update();
             $cart->total_price = CartItem::query()->where('cart_id', $cart->id)->sum('total_price');
@@ -127,7 +135,7 @@ class CartController extends Controller
         return response()->json([
             'messages' => 'تعداد کالا با موفقیت یک واحد کاهش یافت',
             'yourCartItem' => $cartItem,
-            'yourCart'=>$cart
+            'yourCart' => $cart
         ]);
 
     }
@@ -135,20 +143,20 @@ class CartController extends Controller
     // More Count Product
     public function moreItem(Request $request)
     {
-        $cart= Cart::query()->where('user_id', auth()->user()->id)->first();
-        if ($cart===null){
+        $cart = Cart::query()->where('user_id', auth()->user()->id)->first();
+        if ($cart === null) {
             return response()->json(['yourCart' => 'سبد خرید شما خالی است']);
         }
         $request->validate([
             'product_id' => 'required|exists:cart_items,product_id',
         ]);
         $product = Product::findOrFail($request->product_id);
-        $cartItem=$cart->items()->where('product_id', $request->product_id)->first();
+        $cartItem = $cart->items()->where('product_id', $request->product_id)->first();
         if ($cartItem->quantity >= $product->quantity) {
-            return['errors' => 'تعداد وارد شده بیشتر از موجودی کالا است'];
-        }else {
+            return ['errors' => 'تعداد وارد شده بیشتر از موجودی کالا است'];
+        } else {
             $cartItem->quantity++;
-            $cartItem->total_price=$cartItem->quantity * $cartItem->price;
+            $cartItem->total_price = $cartItem->quantity * $cartItem->price;
             $cartItem->update();
             $cart->total_price = $cartItem->query()->where('cart_id', $cart->id)->sum('total_price');
             $cart->update();

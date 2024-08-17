@@ -52,9 +52,13 @@ class AuthController extends BaseController
             'otp' => 'required|numeric|digits:4'
         ]);
 
-        $otpRecord = DB::table('otp')->where('phone_number', $request->phone_number)->where('otp', $request->otp)->first();
+        $otpRecord = DB::table('otp')
+            ->where('phone_number', $request->phone_number)
+            ->where('expired_at', '>', now())
+            ->where('otp', $request->otp)
+            ->first();
 
-        if (!$otpRecord || now()->greaterThan($otpRecord->expired_at)) {
+        if (!$otpRecord) {
             return response()->json(['error' => 'کد تایید نامعتبر یا منقضی شده است.'], 401);
         }
 

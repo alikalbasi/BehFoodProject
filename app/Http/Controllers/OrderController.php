@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CartItemCollection;
 use App\Http\Resources\OrderCollection;
+use App\Http\Resources\OrderResource;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -14,13 +15,10 @@ class OrderController extends Controller
     // Show Orders
     public function Show()
     {
-        $order=new OrderCollection(Order::query()->where('user_id', auth()->user()->id)->paginate(6));
-        if (count($order)===0){
-            return response()->json(['message' => 'شما سفارشی ثبت نکرده اید']);
-        }
-        return response()->json([
-           'orders'=>$order,
-        ]);
+//        $order=//        if (count($order)===0){
+//            return response()->json(['message' => 'شما سفارشی ثبت نکرده اید']);
+//        }
+        return response()->json(OrderResource::collection(Order::with('items')->where('user_id', auth()->user()->id)->paginate(6)));
     }
 
     // Create New Order

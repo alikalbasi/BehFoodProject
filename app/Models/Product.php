@@ -14,12 +14,14 @@ class Product extends Model
     ];
 
 
-    public function orderItem(){
-        return $this->belongsToMany(OrderItem::class);
+    public function orders(){
+        return $this->belongsToMany(Order::class, 'order_items')->withPivot([
+            'price', 'quantity'
+        ]);
     }
 
-    public function cartItem(){
-        return $this->belongsToMany(CartItem::class);
+    public function carts(){
+        return $this->belongsToMany(Cart::class, 'cart_items');
     }
 
     public function category()
